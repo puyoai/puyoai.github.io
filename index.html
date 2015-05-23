@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="puyo AI : puyopuyo">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>puyo AI</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/puyoai">View on GitHub</a>
+
+          <h1 id="project_title">puyo AI</h1>
+          <h2 id="project_tagline">puyopuyo</h2>
+
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a id="faq" class="anchor" href="#faq" aria-hidden="true"><span class="octicon octicon-link"></span></a>FAQ</h1>
+
+<p>AIに関してよく聞かれる質問及び回答をまとめました。</p>
+
+<p>注：フレームという単位は1/60秒を指します。</p>
+
+<h2>
+<a id="基本" class="anchor" href="#%E5%9F%BA%E6%9C%AC" aria-hidden="true"><span class="octicon octicon-link"></span></a>基本</h2>
+
+<ul>
+<li><p>どのように動いているのですか？</p></li>
+</ul>
+
+<ol>
+<li>ゲーム映像をビデオキャプチャで取得し、画面を解析します。
+
+<ul>
+<li>Wii版の場合、Wiiから出ている映像信号を分岐して用います。</li>
+<li>アーケード版の場合、基板と筐体をつないでいるハーネスから映像信号を取り出します。</li>
+</ul>
+</li>
+<li>別プロセスで動いているAIに、解析した画面の結果を渡します。</li>
+<li>AIが思考し、どこにぷよを落としたいのかを決定します。</li>
+<li>そこにぷよを落とすためのキー操作列を生成し、キー入力を実機に送ります。
+
+<ul>
+<li>Wii版、アーケード版とも、Arduinoを使っています。</li>
+<li>Wii版の場合、ArduinoにWii拡張コントローラーのふりをさせることができます。押したボタンをWiiリモコンに送ることで、
+操作をさせています。
+　  * 詳しい人向け: ArduinoとPCの通信は、シリアル通信を用いています。</li>
+<li>アーケード版の場合、ハーネスにボタンの線がありますので、Arduinoを用いて電気的にボタンを押しています。
+
+<ul>
+<li>詳しい人向け: ボタンは5Vが来ていて、1kΩ抵抗でプルアップされています。単純にGNDに接続すればボタンが押せたことになります。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+
+<p>本体および基板には一切の改造を施していません。</p>
+
+<h2>
+<a id="映像" class="anchor" href="#%E6%98%A0%E5%83%8F" aria-hidden="true"><span class="octicon octicon-link"></span></a>映像</h2>
+
+<ul>
+<li>13段目は見えているのですか？</li>
+</ul>
+
+<p>見えていません。AIは適当に推測をしています。</p>
+
+<h2>
+<a id="思考" class="anchor" href="#%E6%80%9D%E8%80%83" aria-hidden="true"><span class="octicon octicon-link"></span></a>思考</h2>
+
+<ul>
+<li>どのように思考しているのですか？</li>
+</ul>
+
+<p>ぷよの置き方を全通り試し、なんらかの評価値をつけ、その評価値がもっとも高い置き方を選ぶ、という方法で思考をします。</p>
+
+<p>置き方を試す場合、ぷよぷよ通では、今操作しているぷよ、NEXTおよびNEXT2の3つの組ぷよまでがみられます。
+この全ての組み合わせを試すことができそうですが、ぷよがフィールドに現れて操作可能になった瞬間はNEXT2は見えていません。
+NEXT2は、現在のぷよが操作可能になってから16フレーム遅延してはじめて見られるようになります。
+そのため、NEXT2の情報は実質的には使えません。したがって、
+現在操作可能なぷよ及びNEXTの置き方を全通り試して思考します。ただし実際には、NEXT2が見えた瞬間にNEXTをどこに置くかを考えています。
+NEXT2が見えた後でNEXTが操作可能になるまでには20フレーム程度の余裕があり、その間に思考をしています。</p>
+
+<ul>
+<li>ツモ予見は使っていますか？</li>
+</ul>
+
+<p>使っています。</p>
+
+<p>ツモ予見とは、相手の方が自分よりも高速にぷよを積んでいる場合、相手の配ぷよを見ることでNEXT2以降のツモがわかること、と定義します。
+フレームワーク型で、予見できるツモ全てをAIに送るようにしています。ただし、4手後以降を探索することはAIにとっては現実的ではないです。</p>
+
+<ul>
+<li>評価のつけ方はどのようにするのでしょうか？</li>
+</ul>
+
+<p>これはAIによって異なるため、難しい質問です。
+基本的には、大きな連鎖を組むことができれば高評価ですが、速攻型・潰し型を作ろうと思えば大きな連鎖は高評価にはならないでしょう。</p>
+
+<h2>
+<a id="定石-定積" class="anchor" href="#%E5%AE%9A%E7%9F%B3-%E5%AE%9A%E7%A9%8D" aria-hidden="true"><span class="octicon octicon-link"></span></a>定石 (定積)</h2>
+
+<ul>
+<li>GTRなどの定形は組みますか？</li>
+</ul>
+
+<p>mayah(AI)は定積ファイルを持っており、パターンマッチングを行なって定積型に高評価を与えています。
+これはなるべく人間らしい積みをさせるためでもありますが、土台を安定させることによってより大きな連鎖を組むことができることが
+分かったので採用しました。</p>
+
+<ul>
+<li>弥生は組みますか？</li>
+</ul>
+
+<p>mayah(AI)は組みます。</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
